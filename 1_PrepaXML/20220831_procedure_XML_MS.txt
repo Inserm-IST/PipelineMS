@@ -1,0 +1,44 @@
+17/08/2022
+Procédure allégée d'alimentation des métadonnées XML M/S
+Produite par AM à partir d'une procédure de JJ du 21/01/2022. Modifiée par JJ suite à modification du script
+pour coller aux demandes de CI le 31/08/2O22 
+
+Créer un répertoire contenant
+- un dossier avec les fichiers XML à enrichir
+- le programme Python (automate_ms.py)
+- le fichier geckodriver.exe pour Windows
+- le fichier requirements.txt => bien utiliser le package selenium <=4.2.0. Des modifications (détaillées lors du lancement du programme dans le terminal sont à prévoir pour pouvoir utiliser le programme en 4.3.0 et plus, version sortie il y a 2 mois)
+
+Créer un répertoire contenant:
+- un dossier avec les dossiers lots MS à enrichir (XML, PDF, images)
+- le programme MS_automate_XML.py
+
+Ouvrir la ligne de commande Windows
+lancer la commande suivante (à ne faire qu'une seule fois) :
+
+setx path "%path%;c:\Users\prénom.nom\le\chemin\vers\geckodriver.exe"
+Attention => cette étape a normalement été ajoutée dans le programme. 
+
+
+Lancer Anconda Prompt
+
+Aller à l'emplacement du programme : cd chemin/vers/le/programme
+
+Créer un environnement virtuel : conda create -n nom_env_virtuel python=3.8
+
+Activer l'environnement virtuel : conda activate nom_env_virtuel
+
+(Installer les librairies : pip3 install -r requirements.txt
+
+--> pb avec python levenshtein)
+
+Lancer la commande : conda install -c conda-forge python-levenshtein
+
+Relancer la commande : pip3 install -r requirements.txt
+
+
+Lancer le script : python automate_MS.py [Repertoire]
+
+Vérifier les fichiers
+
+Le dossier default est créé et liste les mots clés non trouvés.
