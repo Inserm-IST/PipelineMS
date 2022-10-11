@@ -34,9 +34,12 @@ def create_page(df):
         MD_fichier = df.loc[n]
         # récupération du contenu de la cellule dc.source et stockage dans la variable source
         source = MD_fichier["dc.source[]"]
-        # récupération des 4 derniers caractères de la chaîne de caractère récupérée => le numéro de page de la
-        # dernière page de l'article
-        page = source[-4:]
+        # récupération du contenu de la cellule dc.source et stockage dans la variable source
+        source = MD_fichier["dc.source[]"]
+        # récupération du numéro de page de la dernière page de l'article
+        page = re.findall(r'-.{1,4}$', source)
+        page = "".join(page)
+        page = page.replace("-", "")
         # ajout du numéro obtenu dans la liste liste_page
         liste_page.append(page)
         # incrémentation du n
@@ -172,7 +175,7 @@ def creation_html(categorie, df, racine):
         # récupération de la ligne traitée
         df_line = df_categorie.loc[n]
         # création des balises html pour l'article traité
-        div1_html = ET.SubElement(cat_html, "div")
+        div1_html = ET.SubElement(racine, "div")
         div1_html.attrib['class']='artifact-description'
         div2_html = ET.SubElement(div1_html, "div")
         # création de la valeur class qui a pour valeur artifact title
@@ -186,9 +189,8 @@ def creation_html(categorie, df, racine):
         a_html = ET.SubElement(div2_html, "a", href=handle_propre,onclick="window.open(this.href,'_blank');return false;")
         # création des balises suivantes
         h4_html = ET.SubElement(a_html, "h4")
-        i_html = ET.SubElement(h4_html, "i")
         # ajout du texte dans la cellule titre dans la balise titre
-        i_html.text = df_line["dc.title[fr]"]
+        h4_html.text = df_line["dc.title[fr]"]
         p_html = ET.SubElement(div2_html, "p")
         p_html.attrib["class"]="author"
         span_html = ET.SubElement(p_html, "span")
