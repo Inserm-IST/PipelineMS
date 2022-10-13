@@ -1,17 +1,18 @@
-# Procédure d'utilisation du programme MS_automate_XML.py
+# Programme MS_automate_XML.py
 
-Créer un répertoire contenant
-- un dossier avec les lots à enrichir
-- le programme Python (automate_ms.py)
-- le fichier geckodriver.exe pour Windows (fourni)
-- le fichier chromedriver.exe (fourni)
+## But du programme
+Le programme MS_automate_XML.py a pour but le nettoyer et l'alimentation automatique des fichiers XML des articles présents dans les lots Medecine\Sciences. Le script gère:
+  - la récupération et l'ajout du pmid de l'article dans le XML au sein d'une balise **article-id pub-id-type="pmid"** dans la partie **article-meta**
+  - la traduction des mots clefs MeSH indexant l'article en français et leur ajout dans le XML dans la balise **kwd-group kwd-group-type="MESH"**
+  - la suppression des mentions d'images non employées (tiff, tif, small, img1)
+  
+## Fonctionnement du programme
+Le programme python traite chaque xml présent dans un dossier lot.<br/>
+La lecture et les modifications (ajouts comme suppressions de balises) dans le XML sont réalisées avec le module etree de librairie python [lxml](https://pypi.org/project/lxml/) et la librairie [minidom](https://docs.python.org/3/library/xml.dom.minidom.html).<br/>
+Le script récupère d'abord le DOI de l'article présent dans les métadonnées du XML et utilise une fonction *doi2pmid* disponible dans la librairie python [metapub](https://pypi.org/project/metapub/) qui permet d'interagir avec les API de la NLM (National Librairy of Medecine des Etats Unis). Cela permet d'obtenir le pmid de l'article.<br/>
+Les mots clefs MeSH sont traduits par le biais du [traducteur](http://ccsdmesh.in2p3.fr/FrenchMesh/admin/translate.jsp) associé au site du MeSH bilingue français-anglais, géré par l'IST. Il est ouvert automatiquement dans une page Web par le programme grâce à la librairie [Selenium](https://selenium-python.readthedocs.io/). Le programme ajoute ensuite le pmid de l'article dans le formulaire de recherche, appuyer sur le bouton de recherche et récupérer le résultat affiché dans la page html.<br/>
+**A noter le temps de latence prévu à ce moment: un délai de 30 secondes permet d'attendre le résultat de la recherche, avant sa récupération par le programme.**<br/>
+Le programme cherche et supprime ensuite les balises **graphic** qui ont pour sujet des images tiff, tif, small et img<br/>
 
-Lancer Anaconda Prompt
-
-Aller à l'emplacement du programme : cd chemin/vers/le/programme
-
-Lancer le script : *python automate_MS.py [Repertoire]*
-
-Vérifier les fichiers
-
-Le dossier default est créé et liste les mots clés non trouvés.
+## Utilisation du programme
+Pour l'utilisation du programme hors de la pipeline, se reférer à la procédure procedure_MS_XML.txt présente au sein de ce dossier.
