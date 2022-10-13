@@ -15,7 +15,7 @@ La lecture et la création de documents XML (ajouts comme suppressions de balise
 Le script créé tout d'abord le fichier dublin_core.xml à partir des métadonnées contenues dans le XML de l'article et grâce à la feuille de transformation XSLT EDPmeta2DSpace_single2021.xsl créée par EDP Sciences et fournie dans le dossier.<br/>
 Il renomme ensuite le nom du dossier lot en *item_numéro* en utilisant le numéro d'item de l'article présent dans le XML grâce à la librairie [os](https://docs.python.org/fr/3/library/os.html).<br/>
 Les images non souhaitées sont repérées dans le dossier à partir de leur nom puis supprimées avec des fonctions de la librairie os.<br/>
-Les noms des PDF et XML sont renommés en *MS_annee_mois_numéroItem.xml* et MS_annee_mois_nuemroItem.PDF*. Dans le cas d'un lot Hors-Série, une option a été implémentée dans le programme afin de pouvoir les traiter en ajoutant un HS dans le nom des fichiers, voir dans la procédure Procédure_MS_file.txt.<br/>
+Les noms des PDF et XML sont renommés en *MS_annee_mois_numéroItem.xml* et *MS_annee_mois_nuemroItem.PDF*. Dans le cas d'un lot Hors-Série, une option a été implémentée dans le programme afin de pouvoir les traiter en ajoutant un HS dans le nom des fichiers, voir dans la procédure Procédure_MS_file.txt.<br/>
 
 
 ## Utilisation du programme
