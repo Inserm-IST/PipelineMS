@@ -12,6 +12,7 @@ La lecture et les modifications (ajouts comme suppressions de balises) dans le X
 Le script récupère d'abord le DOI de l'article présent dans les métadonnées du XML et utilise une fonction *doi2pmid* disponible dans la librairie python [metapub](https://pypi.org/project/metapub/) qui permet d'interagir avec les API de la NLM (National Librairy of Medecine des Etats Unis). Cela permet d'obtenir le pmid de l'article.<br/>
 Les mots clefs MeSH sont traduits par le biais du [traducteur](http://ccsdmesh.in2p3.fr/FrenchMesh/admin/translate.jsp) associé au site du MeSH bilingue français-anglais, géré par l'IST. Il est ouvert automatiquement dans une page Web par le programme grâce à la librairie [Selenium](https://selenium-python.readthedocs.io/). Le programme ajoute ensuite le pmid de l'article dans le formulaire de recherche, appuyer sur le bouton de recherche et récupérer le résultat affiché dans la page html.<br/>
 **A noter le temps de latence prévu à ce moment: un délai de 30 secondes permet d'attendre le résultat de la recherche, avant sa récupération par le programme.**<br/>
+Dans le cas d'un délai d'attente trop long ou bien d'un gel du navigateur employé, une option a été implémentée au sein du programme et permet de basculer sur chrome au lieu de firefox. La commande est indiquée dans la procédure ci-jointe<br/>
 Le programme cherche et supprime ensuite les balises **graphic** qui ont pour sujet des images tiff, tif, small et img<br/>
 
 ## Utilisation du programme
