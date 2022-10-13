@@ -251,7 +251,7 @@ def remove_pmid(fichier):
 @click.command()
 @click.argument('doc', type=str)
 @click.option("-c","--Ch","chrome", is_flag=True, default=False, help="si on souhaite utiliser Chrome plutôt que Firefox")
-def automate_ms_motsclefs(doc):
+def automate_ms_motsclefs(doc,chrome):
     """
     Script faisant partie de la pipeline de traitement des Médecine\Sciences pour leur intégration dans iPubli.
     Programme qui, à partir d'un dossier contenant les lots de Medecine\Science pour import extrait d'EDP Sciences,
@@ -265,11 +265,11 @@ def automate_ms_motsclefs(doc):
     if chrome:
         # Ouvre le navigateur
         browser = webdriver.Chrome(
-            executable_path=r"C:\Users\juliette.janes\Desktop\Boite_a_outils\Pipeline_MS\PrepaXML\chromedriver.exe")
+            executable_path=r".\1_PrepaXML\chromedriver.exe")
     else:
         # Ouvre le navigateur
         browser = webdriver.Firefox(
-            executable_path=r"C:\Users\juliette.janes\Desktop\Boite_a_outils\Pipeline_MS\PrepaXML\geckodriver.exe")
+            executable_path=r".\1_PrepaXML\geckodriver.exe")
     # accès à la page du traducteur mesh
     browser.get('http://ccsdmesh.in2p3.fr/FrenchMesh/admin/translate.jsp')
     # création doc fichiers à corriger vide
