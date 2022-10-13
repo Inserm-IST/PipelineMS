@@ -1,7 +1,7 @@
 # Programme MS_automate_XML.py
 
 ## But du programme
-Le programme MS_automate_XML.py a pour but le nettoyer et l'alimentation automatique des fichiers XML des articles présents dans les lots Medecine\Sciences. Le script gère:
+Le programme MS_automate_XML.py a pour but le nettoyage et l'alimentation automatique des fichiers XML des articles présents dans les lots Medecine\Sciences. Le script gère:
   - la récupération et l'ajout du pmid de l'article dans le XML au sein d'une balise **article-id pub-id-type="pmid"** dans la partie **article-meta**
   - la traduction des mots clefs MeSH indexant l'article en français et leur ajout dans le XML dans la balise **kwd-group kwd-group-type="MESH"**
   - la suppression des mentions d'images non employées (tiff, tif, small, img1)
