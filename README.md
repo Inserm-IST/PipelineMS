@@ -3,24 +3,27 @@ Pipeline de programmes python visant à une préparation facilitée des document
 
 ## Guide d'utilisation
 1) Récupération des lots fournis par EDP Sciences, éditeur de la revue Medecine\Sciences. Pour chaque magazine, ils contiennent un dossier par article composé d'un PDF de l'article, un XML du texte et des images présentées dans le texte.
-2) Lancement du programme MS_automate_XML.py qui alimente automatiquement le XML de chaque article:
-    - ajout du pmid
-    - ajout des mots clefs MeSH traduits en français
-    -suppression des images mentionnées non souhaitées
-    
-    Suivre la procédure disponible dans le dossier [1_PrepaXML](https://github.com/Inserm-IST/PipelineMS/tree/main/1_PrepaXML)
-3) Lancement du programme MS_automate_file.py qui organise automatiquement la structure des fichiers à importer dans iPubli:
-    - suppression des images non souhaités
-    - création du fichier XML contenant les métadonnées de l'article en dublin core
-    - renommage des fichiers
-    - création du fichier content qui répertorie les fichiers présents dans chaque dossier article
-    - création du fichier metadata.xml qui paramètre l'affichage des métadonnées dans iPubli
-    
-    Suivre la procédure disponible dans le dossier [2_PrepaFichiers](https://github.com/Inserm-IST/PipelineMS/tree/main/2_PrepaFichiers)
-4) Ajout des lots avec le programme d'import
-5) Création automatique du sommaire html de présentation du magazine
 
-   Suivre la procédure disponible dans le dossier [3_Sommaire_creation](https://github.com/Inserm-IST/PipelineMS/tree/main/3_Sommaire_creation)
+Dans Anaconda Prompt (pour un utilisateur Windows):
+
+2) Navigation dans le bureau: `cd Users\[nom]\Desktop\`
+3) Téléchargement du dépôt github: `git clone https://github.com/Inserm-IST/PipelineMS.git` et navigation dedans: `cd PipelineMS`
+4) Ajout manuel du dossier de lots téléchargés dans le 1 dans le dossier PipelineMS tout juste créé
+5) Lancement du programme MS_automate_XML.py qui nettoie et alimente le XML de chaque article:<br/>
+ `python 1_PrepaXML\MS_automate_XML.py [nom_du_dossier_à_traiter]`<br/>
+  Pour plus d'informations: [1_PrepaXML](https://github.com/Inserm-IST/PipelineMS/tree/main/1_PrepaXML)
+
+6) Lancement du programme MS_automate_file.py qui organise automatiquement la structure des dossiers (renommage, suppression et création automatique de fichiers):<br/>
+    `python 2_PrepaFichiers\MS_automate_file.py [nom_du_dossier_à_traiter] [Année_du_magazine] [mois_du_magazine]`<br/>
+   Les mois et années doivent être notés en chiffres.<br/>
+   Pour plus d'informations: [2_PrepaFichiers](https://github.com/Inserm-IST/PipelineMS/tree/main/2_PrepaFichiers)<br/>
+7) Ajout des lots avec le programme d'import
+8) Création du sommaire html du magazine: 
+        - Dans la nouvelle page du magazine ajouté, *Contexte>exporter les métadonnées* et télécharger le csv dans le dossier PipelineMS
+        - Ajouter une colonne *categorie* dans le csv et insérer le nom de la catégorie pour chaque article
+        - Lancement du programme MS_automate_sommaire.py:<br/>
+        `python 3_Sommaire_creation\MS_automate_sommaire.py [nom_du_csv]`<br/>
+ Pour plus d'informations: [3_Sommaire_creation](https://github.com/Inserm-IST/PipelineMS/tree/main/3_Sommaire_creation)
 
 ## Crédits
 Ce projet a été réalisé par le DISC-IST.
