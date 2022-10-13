@@ -23,7 +23,7 @@ def creation_db(dir):
     :return: fichier dublin_core xml contenant les métadonnées de l'article traité
     """
     # lecture et stockage de la feuille XSL de transformation du XML de l'article en dublin core XML
-    creation_dublincore = etree.parse("EDPmeta2DSpace_single2021.xsl")
+    creation_dublincore = etree.parse(r".\2_PrepaFichiers\EDPmeta2DSpace_single2021.xsl")
     # transformation de la feuille de XSL en XSLT pour python afin de permettre son utilisation
     xslt_transformation = etree.XSLT(creation_dublincore)
 
