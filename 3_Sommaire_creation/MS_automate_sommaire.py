@@ -39,15 +39,13 @@ def create_page(df):
         # récupération du numéro de page de la dernière page de l'article
         page = re.findall(r'-.{1,4}$', source)
         page = "".join(page)
-        page = page.replace("-", "")
+        page = int(page.replace("-", ""))
         # ajout du numéro obtenu dans la liste liste_page
         liste_page.append(page)
         # incrémentation du n
         n += 1
     # ajout d'une colonne page dans le dataframe qui correspond au numéro de page de l'article
-    df["page"] = liste_page
-    # typage des valeurs de la colonne page en entier
-    df['page'] = df['page'].astype('int')
+    df["page"]=liste_page
     # organisation de la dataframe en fonction du numéro de page
     df = df.sort_values(["page"])
     # on retourne le nouveau dataframe
