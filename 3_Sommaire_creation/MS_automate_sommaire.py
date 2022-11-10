@@ -162,7 +162,7 @@ def creation_html(categorie, df, racine):
     df_categorie = df_categorie.reset_index(drop=True)
     # recherche de ul dans l'arbre xml
     # création de la balise h3 contenu le titre de la catégorie et insertion dans le xml
-    cat_html = ET.SubElement(racine, "li")
+    cat_html = ET.SubElement(racine, "p")
     cat_html.attrib['class']="som-titre-niveau1"
     i_cat_html = ET.SubElement(cat_html, "i")
     i_cat_html.text = categorie
@@ -185,15 +185,16 @@ def creation_html(categorie, df, racine):
         handle = df_line['dc.identifier.uri']
         # suppression d'url pour conserver uniquement le handle
         handle_propre = handle[-5:]
+        ul_html = ET.SubElement(div2_html, "ul")
         # création de la balise a qui contient le handle et permet de faire le lien avec la page de l'article. Ajout
         # de la valeur handle dans l'attribut handle et de l'attribut onclick permettant de création un lien
-        a_html = ET.SubElement(div2_html, "a", href=handle_propre,onclick="window.open(this.href,'_blank');return false;")
+        a_html = ET.SubElement(ul_html, "a", href=handle_propre,onclick="window.open(this.href,'_blank');return false;")
         # création des balises suivantes
         li_div_html = ET.SubElement(a_html, "li")
         li_div_html.attrib['class'] = "som-titre-niveau2"
         # ajout du texte dans la cellule titre dans la balise titre
         li_div_html.text = df_line["dc.title[fr]"]
-        li_author_html = ET.SubElement(div2_html, "li")
+        li_author_html = ET.SubElement(ul_html, "li")
         li_author_html.attrib["class"]="author"
         span_html = ET.SubElement(li_author_html, "span")
         # ajout des auteurs de l'article, récupérés et reformulés dans la fonction construction_auteur dans la balise span
@@ -219,36 +220,35 @@ def creation_css(filename):
         } 
             span {
             font-size:13px; 
-            text-align:justify;
             margin-left: 30px;
+			margin-top:0.1px;
         font-style: italic;
             color: #999;
             }
-                    p1   {
+                    p   {
     font-family: inherit;
         font-weight: 500;
         line-height: 1.1;
-            font-size:15px; 
-            text-align:justify;
+            font-size:15px;
     		margin-left: 0px;
             color: #999;	
 
             }
-            li.som-titre-niveau1 { 
+            .som-titre-niveau1 { 
          font-size:20px; 
             font-style: italic;
             font-weight: bold;
     margin: 15px;
-    margin-left: 0px;
+    margin-left: 30px;
     display: block;
     color:#2b1d60;
 
             }
 
-           li.som-titre-niveau2  { 
-            font-size:17px; 
-            text-align:justify;
+           .som-titre-niveau2  { 
+            font-size:17px;
     		margin-left: 30px;
+			margin-bottom: 0.1px;
     font family:"Open Sans", Calibri, Verdana, Arial, sans-serif;
     line-height: 1.428571429;
     color:#707070;
@@ -281,16 +281,15 @@ def creation_sommaire(csv_file):
     liste_div = create_df_cat(df_page)
     # Création de l'élément xml racine du html sommaire
     racine = ET.Element("div", id="our_summary")
-    sommaire = ET.SubElement(racine, "p1")
+    sommaire = ET.SubElement(racine, "p")
     sommaire.text = "Sommaire"
-    ul = ET.SubElement(racine, "ul")
     # pour chaque catégorie de la liste list_div les actions suivantes sont réalisées
     for categorie in liste_div:
         #affichage de la catégorie traitée
         print("Traitement de la catégorie "+categorie)
         # mobilisation de la fonction creation_html qui, pour toutes les lignes du csv catégorie traitée, créé les balises
         # html correspondantes et y ajoute le texte et les valeurs d'attributs extraites du csv
-        ul = creation_html(categorie, df_page, ul)
+        racine = creation_html(categorie, df_page,racine)
 
     # transformation de l'élément xml racine en arbre xml
     racine = ET.ElementTree(racine)
