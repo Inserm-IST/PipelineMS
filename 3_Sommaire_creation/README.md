@@ -1,29 +1,20 @@
-# Procédure pour l'utilisation du programme MS_automate_sommaire.py
+# Programme MS_automate_sommaire.py
 
-Permet la création automatique du sommaire d'un magazine Medecine\Science une fois l'import par lots des articles et de leurs métadonnées réalisés dans iPubli.
+## But du programme
+Le programme MS_automate_sommaire.py a pour but la construction automatique du sommaire d'un numéro Medecine\Science. Le script gère:
+  - la construction de la structure HTML du sommaire selon le patron disponible dans le dossier (***sommaire_patron.html***)
+  - l'ajout des informations textuelles dans chacune des balises HTML du sommaire (nom des catégories, titre et auteurs de l'article)
+  - la récupération et l'ajout du handle de chaque article afin d'obtenir un lien cliquable vers chaque article
+ 
+  
+## Fonctionnement du programme
+Le programme python traite un tableur en format csv contenant les métadonnées d'un numéro et extrait d'iPubli.<br/>
+Il est nécessaire d'ajouter dans le csv une colonne ***categorie*** informant de la catégorie de chaque article, afin de permettre au programme de générer une structure correspondant à l'organisation du sommaire.<br/>
+La lecture du tableur et la récupération des métadonnées en son sein est effectuée avec la librairie [pandas](https://pandas.pydata.org/).<br/>
+La construction de la structure HTML est réalisée avec le module etree de librairie python [lxml](https://pypi.org/project/lxml/).<br/>
+Le programme génère un fichier xml avec une balise style contenant la feuille de style css du sommaire et une balise div contenant le sommaire en lui même.<br/>
+Le résultat est à vérifier et coller dans les métadonnées de la collection traitée (numéro).
 
-Extraire en csv les métadonnées des articles du magazine.
+## Utilisation du programme
+Pour l'utilisation du programme hors de la pipeline, se référer à la procédure procedure_MS_sommaire.txt présente au sein de ce dossier.
 
-Ajouter une nouvelle colonne au csv:
-	- Nom de la colonne: categorie (sans accent ni espace)
-	- Contenu de la colonne: la catégorie de l'article (Editorial, Forum, Nom de la rubrique). 
-Attention => il est important d'écrire en toutes lettres le nom de la rubrique de l'article et de vérifier que lorsque plusieurs articles font partis de la même rubrique la catégorie soit exactement identique dans le csv (pas d'accent,
-d'espace ou de majuscules qui changent). Conseil: réaliser un copier coller.
-
-Créer un répertoire contenant:
-	- le fichier csv des métadonnées du magazine
-	- le programme python MS_automate_sommaire.py
-
-Lancer Anaconda Prompt
-
-Aller à l'emplacement du programme: cd chemin/vers/le/programme
-
-Lancer le script: python MS_automate_sommaire.py [nom_du_csv]
-
-Le programme va s'exécuter avec des informations affichées dans l'Anaconda Prompt. 
-
-Le programme détecte (dans la mesure du possible) les erreurs de frappes lors de l'ajout des catégories dans le csv. Il l'indique et permet à l'utilisateur du script de les corriger puis de relancer le programme. 
-
-A noter: si une faute de frappe dans les catégories du csv est trop éloignée des autres noms de rubriques, le programme ne trouvera pas d'erreur. Il est donc important de vérifier les rubriques indiquées dans le csv.
-
-Un fichier sommaire.xml est créé à la fin du programme dans le répertoire de travail. Il contient le html à coller directement dans iPubli au niveau de la description de la collection. Bien le vérifier avant.
