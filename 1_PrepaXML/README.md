@@ -16,4 +16,4 @@ Dans le cas d'un délai d'attente trop long ou bien d'un gel du navigateur emplo
 Le programme cherche et supprime ensuite les balises **graphic** qui ont pour sujet des images tiff, tif, small et img<br/>
 
 ## Utilisation du programme
-Pour l'utilisation du programme hors de la pipeline, se reférer à la procédure procedure_MS_XML.txt présente au sein de ce dossier.
+Pour l'utilisation du programme hors de la pipeline, se référer à la procédure procedure_MS_XML.txt présente au sein de ce dossier.
