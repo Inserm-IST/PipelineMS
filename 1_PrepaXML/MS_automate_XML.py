@@ -153,21 +153,28 @@ def enrichissementXML(nom,browser, pmid_verif=False):
     # récupération du doi en lui même (le contenu de la balise doi)
     doi = doi_xml.firstChild.nodeValue
     # fonction permettant à partir d'un doi d'obtenir le pmid équivalent.
-    pmid = metapub.convert.doi2pmid(doi)
-    # application de la fonction traduction qui permet d'interroger le traducteur web du mesh et en récupère les mots clefs
-    # mesh
-    kwd_group = traduction(pmid,browser,nom)
-    if kwd_group == False:
-        pass
-    else:
-        # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
-        root = CreationArbre(root,nom, pmid, kwd_group)
-        # ouverture du fichier XML
-        f = open(nom, 'w', encoding='utf-8')
-        # impression dans le fichier de l'arbre XML obtenu
-        root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
-        # fermeture du fichier
-        f.close()
+    try:
+        pmid = metapub.convert.doi2pmid(doi)
+        kwd_group = traduction(pmid, browser, nom)
+        # application de la fonction traduction qui permet d'interroger le traducteur web du mesh et en récupère les mots clefs
+        # mesh
+        if kwd_group == False:
+            pass
+        else:
+            # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
+            root = CreationArbre(root, nom, pmid, kwd_group)
+            # ouverture du fichier XML
+            f = open(nom, 'w', encoding='utf-8')
+            # impression dans le fichier de l'arbre XML obtenu
+            root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
+            # fermeture du fichier
+            f.close()
+    except:
+        print("Le pmid de l'article ne peut pas être trouvé. Le document n'est pas traité.")
+        with open("fichiers_a_corriger.txt", "a") as f:
+            # on y ajoute le nom du fichier avec la mention pmid non trouvé
+            f.write("Pmid non trouvé: " + nom + "\n")
+
 
 
 def sup_graphic(fichier):
