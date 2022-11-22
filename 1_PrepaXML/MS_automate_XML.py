@@ -70,6 +70,7 @@ def traduction(pmid,browser,nom):
     buttonElem.click()
     # Attendre 30 secondes pour laisser le temps au serveur de donner la réponse
     time.sleep(30)
+    mesh_group = False
     # au bout de 30 secondes, si le bouton a encore comme valeur chargement
     if 'Chargement' in buttonElem.get_attribute('value'):
         # On indique à l'utilisateur que le fichier n'a pas pu être traité
@@ -156,14 +157,17 @@ def enrichissementXML(nom,browser, pmid_verif=False):
     # application de la fonction traduction qui permet d'interroger le traducteur web du mesh et en récupère les mots clefs
     # mesh
     kwd_group = traduction(pmid,browser,nom)
-    # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
-    root = CreationArbre(root,nom, pmid, kwd_group)
-    # ouverture du fichier XML
-    f = open(nom, 'w', encoding='utf-8')
-    # impression dans le fichier de l'arbre XML obtenu
-    root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
-    # fermeture du fichier
-    f.close()
+    if kwd_group == False:
+        pass
+    else:
+        # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
+        root = CreationArbre(root,nom, pmid, kwd_group)
+        # ouverture du fichier XML
+        f = open(nom, 'w', encoding='utf-8')
+        # impression dans le fichier de l'arbre XML obtenu
+        root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
+        # fermeture du fichier
+        f.close()
 
 
 def sup_graphic(fichier):
