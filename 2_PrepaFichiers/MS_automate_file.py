@@ -65,17 +65,17 @@ def creation_metadata(dir):
     racine = etree.Element("dublin_core", schema="inserm")
     # on associe à cette balise une sous balise dc_value avec pour attribut language (valeur autocreation) et element
     # (valeur lexicon)
-    langage1 = etree.SubElement(racine,"dcvalue", language="autocreation", element="lexicon")
+    langage1 = etree.SubElement(racine,"dcvalue", language="",qualifier="autocreation", element="lexicon")
     # on ajoute le texte true encadrée par la balise language précédemment créée
     langage1.text="true"
     # on associe à la balise racine une deuxième sous balise language similaire avec des valeurs d'attribut différentes
-    langage2 = etree.SubElement(racine,"dcvalue", language="conversion", element="bitstream")
+    langage2 = etree.SubElement(racine,"dcvalue", language="",qualifier="conversion", element="bitstream")
     # on ajoute le texte true dans la balise langage 2
     langage2.text = "true"
     # on transforme la balise racine en un arbre XML
     racine = etree.ElementTree(racine)
     # on imprime l'arbre XML racine dans un fichier metadata.xml dans le dossier lot traité
-    racine.write(dir + "/metadata.xml", encoding="utf-8")
+    racine.write(dir + "/metadata_inserm.xml", encoding="utf-8")
 
 
 def renommage_files(dir,nom_standard,renommage):
