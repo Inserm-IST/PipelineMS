@@ -218,7 +218,7 @@ def creation_css(filename):
      ul {
         list-style-type: none;
         } 
-            span {
+            .author {
             font-size:13px; 
             margin-left: 30px;
 			margin-top:0.1px;
