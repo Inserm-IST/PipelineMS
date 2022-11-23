@@ -49,7 +49,7 @@ def sup_images(dir):
     # pour chaque fichier présent dans le dossier lot traité
     for el in os.listdir(dir):
         # si le nom du fichier traité contient un des termes typiques des images que l'on souhaite supprimer
-        if "tif" in el or "small" in el or "img1" in el:
+        if "tif" in el or "small" in el or "img1" in el or "IMG" in el:
             # on supprime le fichier en question du dossier
             os.remove(dir+"/"+el)
 
