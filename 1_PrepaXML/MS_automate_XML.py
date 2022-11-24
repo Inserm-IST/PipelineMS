@@ -195,6 +195,8 @@ def sup_graphic(fichier):
     for legend_img1 in tree.xpath("//inline-graphic/parent::p/following-sibling::p[1]"):
         # et on les supprime
         legend_img1.getparent().remove(img1)
+
+
     # l'arbre xml nettoyé est imprimé dans le fichier XML
     tree.write(fichier, encoding="utf-8")
 

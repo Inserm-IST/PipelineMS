@@ -1,8 +1,6 @@
 """
 Script qui permet, pour un fichier csv contenant les métadonnées de tout un magazine Medecine\Science de former le sommaire
 en HTML correspondant
-ATTENTION: il faut bien préparer le csv auparavant: créer une colonne catégorie où on indique les différentes catégories
-auxquels appartiennent chaque article
 Auteur:Juliette Janes
 Date:20/09/2022
 Contexte: Préparation des documents Medecine\Sciences
@@ -51,14 +49,6 @@ def create_page(df):
     # on retourne le nouveau dataframe
     return df
 
-def similar(a,b):
-    """
-    Fonction qui étudie la similarité entre deux strings et renvoie un score de ressemblance
-    :param a: string
-    :param b: string
-    :return: score de similarité entre les deux str
-    """
-    return SequenceMatcher(None, a, b).ratio()
 
 def create_df_cat(df):
     """
@@ -67,34 +57,13 @@ def create_df_cat(df):
     :return: liste des catégories
     """
     # stockage dans une variable liste_cat des valeurs dans la colonne catégorie
-    liste_cat = df["categorie"].tolist()
+    liste_cat = df["dc.relation.ispartof[]"].tolist()
     # initialisation de la liste unique_liste_cat
     unique_liste_cat = []
     # pour chaque valeur récupérée, si celle-ci n'est pas présente dans la liste unique_liste_cat on l'ajoute
     for x in liste_cat:
         if x not in unique_liste_cat:
             unique_liste_cat.append(x)
-    for el_a_verifier in unique_liste_cat:
-        for el_comparaison in unique_liste_cat:
-            if el_comparaison == el_comparaison:
-                pass
-            else:
-                score_rapprochement = similar(el_a_verifier, el_comparaison)
-                if 0.8<score_rapprochement<0.99:
-                    print("""Des catégories complétées dans le csv semblent similaires. Vérifiez que les valeurs rentrées:\n
-                    Il peut y avoir des accents ou des espaces en trop dans une même catégorie.\nPour remédier à cela, il est 
-                    conseillé de réaliser l'étape d'ajout des catégories dans le csv en copiant-collant et non en écrivant 
-                    manuellement\n. Catégorie problématique: """+el_comparaison+" et "+el_a_verifier)
-                    verif = prompt("""Si cette alerte est fausse, tappez 1, sinon tappez 2.""")
-                    if verif ==1:
-                        pass
-                    elif verif ==2:
-                        print("""Le programme va s'arrêter pour vous permettre de corriger l'erreur. Relancez le une fois 
-                        la correction réalisée.""")
-                        sys.exit()
-                    else:
-                        print("Le numéro rentré n'a pas été compris. Le programme va donc s'arrêter.")
-                        sys.exit()
 
     return unique_liste_cat
 
