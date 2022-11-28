@@ -126,7 +126,7 @@ def creation_html(categorie, df, racine):
     :return: arbre xml racine mis à jour avec les nouveaux articles traités pour 1 catégorie
     """
     # récupération des lignes du df qui font parti de la catégorie traitée
-    df_categorie = df.loc[df['categorie'] == categorie]
+    df_categorie = df.loc[df['dc.relation.ispartof[]'] == categorie]
     # réorganisation de l'index du dataframe obtenu
     df_categorie = df_categorie.reset_index(drop=True)
     # recherche de ul dans l'arbre xml
