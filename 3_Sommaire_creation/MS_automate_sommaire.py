@@ -79,16 +79,9 @@ def construction_auteur(df):
     auteurs = df['dc.contributor.author[-]']
     # division de la chaîne de caractères obtenue en une liste d'auteurs
     auteur_liste = list(auteurs.split("||"))
-    # initialisation du n_auteur
-    n_auteur = 0
-    # récupération du nombre d'éléments que contient la liste
-    n_length_auteur = len(auteur_liste)
-    # initialisation des variables réutilisées dans la boucle suivante
-    auteur_liste_propre = []
+
     # pour chaque auteur de la liste
-    for el_auteur in auteur_liste:
-        # incrémentation du numéro de l'auteur
-        n_auteur += 1
+    for el_auteur, n in enumerate(auteur_liste, start=1):
         # récupération du nom et du prénom de l'auteur avec des regex
         prenom = re.sub(r'([a-zA-ZéÉ]|-)*, ', '', el_auteur)
         nom = re.sub(r', ([a-zA-ZéÉ]|-)*', '', el_auteur)
@@ -135,13 +128,9 @@ def creation_html(categorie, df, racine):
     cat_html.attrib['class']="som-titre-niveau1"
     i_cat_html = ET.SubElement(cat_html, "i")
     i_cat_html.text = categorie
-    # récupération du nombre de lignes dans le dataframe
-    length_df = int(len(df_categorie.index))
-    # initialisation du n
-    n=0
     # tant que le nombre d'itération de la boucle n'est pas égale au nombre de ligne dans le dataframe, on réitère les
     # opérations suivantes
-    while n != length_df:
+    for n in enumerate(df_categorie, start=1):
         # récupération de la ligne traitée
         df_line = df_categorie.loc[n]
         # création des balises html pour l'article traité
@@ -169,8 +158,6 @@ def creation_html(categorie, df, racine):
         # ajout des auteurs de l'article, récupérés et reformulés dans la fonction construction_auteur dans la balise span
         span_html.text = construction_auteur(df_line)
         p_html = ET.SubElement(racine, "p")
-        # incrémentation
-        n+=1
     # la fonction retourne l'arbre xml mis à jour
     return racine
 
