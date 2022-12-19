@@ -24,10 +24,8 @@ def create_page(df):
     # récupération du numéro de page de chaque article et ajout dans le dataframe dans la colonne page
     length_df = int(len(df.index))
     # initialisation du n et de la liste liste_page
-    n = 0
-    liste_page = []
     # Pour chaque ligne du csv (soit les métadonnées d'un fichier) je réalise les opérations suivantes
-    while n != length_df:
+    for n in range(length_df):
         # récupération de la ligne de métadonnées dans le csv
         MD_fichier = df.loc[n]
         # récupération du contenu de la cellule dc.source et stockage dans la variable source
@@ -40,8 +38,6 @@ def create_page(df):
         page = int(page.replace("-", ""))
         # ajout du numéro obtenu dans la liste liste_page
         liste_page.append(page)
-        # incrémentation du n
-        n += 1
     # ajout d'une colonne page dans le dataframe qui correspond au numéro de page de l'article
     df["page"]=liste_page
     # organisation de la dataframe en fonction du numéro de page
