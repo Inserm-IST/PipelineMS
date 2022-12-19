@@ -58,12 +58,7 @@ def create_df_cat(df):
     """
     # stockage dans une variable liste_cat des valeurs dans la colonne catégorie
     liste_cat = df["dc.relation.ispartof[]"].tolist()
-    # initialisation de la liste unique_liste_cat
-    unique_liste_cat = []
-    # pour chaque valeur récupérée, si celle-ci n'est pas présente dans la liste unique_liste_cat on l'ajoute
-    for x in liste_cat:
-        if x not in unique_liste_cat:
-            unique_liste_cat.append(x)
+    unique_liste_cat = list(set(liste_cat))
 
     return unique_liste_cat
 
