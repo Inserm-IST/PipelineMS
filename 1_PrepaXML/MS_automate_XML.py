@@ -159,18 +159,42 @@ def enrichissementXML(nom,browser, pmid_verif=False):
     # récupération du doi en lui même (le contenu de la balise doi)
     doi = doi_xml.firstChild.nodeValue
     # fonction permettant à partir d'un doi d'obtenir le pmid équivalent.
+    print("> doi: %s" % doi)
     pmid = metapub.convert.doi2pmid(doi)
-    # application de la fonction traduction qui permet d'interroger le traducteur web du mesh et en récupère les mots clefs
-    # mesh
-    kwd_group = traduction(pmid,browser,nom)
-    # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
-    root = CreationArbre(root,nom, pmid, kwd_group)
-    # ouverture du fichier XML
-    f = open(nom, 'w', encoding='utf-8')
-    # impression dans le fichier de l'arbre XML obtenu
-    root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
-    # fermeture du fichier
-    f.close()
+    # Si le pmid n'est pas trouvé ou est ambigu
+    if (pmid is None) or (pmid == 'AMBIGUOUS'):
+        print("Le pmid de l'article ne peut pas être trouvé. Le document n'est pas traité.")
+        # on y ajoute le nom du fichier avec la mention pmid non trouvé
+        print("pmid: %s" % pmid)
+        with open("fichiers_a_corriger.txt", "a") as f:
+            f.write(f"Pmid non trouvé: {nom}. Doi: {doi}")
+    else:
+        try:
+            print("> pmid: %s" % pmid)
+            print("> Recherche traduction en cours...")
+            start_time = time.time()
+            kwd_group = traduction(pmid, browser, nom)
+            end_time = time.time()
+            print("> Traduction trouvée en %.2f secondes" % (end_time - start_time))
+            # application de la fonction traduction qui permet d'interroger le traducteur web du mesh et en récupère les mots clefs
+            # mesh
+            if kwd_group == False:
+                pass  # Si la traduction est vide on n'ajoute pas le pmid ?
+            else:
+                # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
+                root = CreationArbre(root, nom, pmid, kwd_group)
+                # ouverture du fichier XML
+                f = open(nom, 'w', encoding='utf-8')
+                # impression dans le fichier de l'arbre XML obtenu
+                root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
+                # fermeture du fichier
+                f.close()
+        except Exception as err:
+            print(err)
+            print("Le pmid de l'article ne peut pas être trouvé. Le document n'est pas traité.")
+            with open("fichiers_a_corriger.txt", "a") as f:
+                # on y ajoute le nom du fichier avec la mention pmid non trouvé
+                f.write("Pmid non trouvé: " + nom + "\n")
 
 
 def sup_graphic(fichier):
