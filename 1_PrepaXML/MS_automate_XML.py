@@ -59,7 +59,7 @@ def traduction(pmid,browser,nom):
     :trype: str
     """
     # trouver le formulaire à remplir dans la page (formulaire nommé pmids)
-    formElem = browser.find_element_by_id('pmIds')
+    formElem = browser.find_element(By.ID, 'pmIds')
     # nettoyage du formulaire
     formElem.clear()
     # rentrer le pmId
@@ -69,28 +69,35 @@ def traduction(pmid,browser,nom):
     # cliquer sur le bouton go
     buttonElem.click()
     # Attendre 30 secondes pour laisser le temps au serveur de donner la réponse
-    time.sleep(30)
-    # au bout de 30 secondes, si le bouton a encore comme valeur chargement
-    if 'Chargement' in buttonElem.get_attribute('value'):
+    # Attendre 30 secondes pour laisser le temps au serveur de donner la réponse
+    mesh_group = False
+    try:
+        WebDriverWait(browser, timeout=30).until(
+            EC.text_to_be_present_in_element_value((By.ID, 'goButton'), 'Go')
+        )
+    except TimeOutException as err:
+        print("Traduction non trouvé en 30sec: {}".format(err))
         # On indique à l'utilisateur que le fichier n'a pas pu être traité
-        print("Le fichier "+ nom+" n'a pas pu être traité. Veuillez fournir le pmid et les mots-clefs MESH manuellement. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
+        print(
+            "Le fichier " + nom + " n'a pas pu être traité. Veuillez fournir le pmid et les mots-clefs MESH manuellement. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
         # on ouvre le fichier txt contenant les fichiers non corrigés
         with open("fichiers_a_corriger.txt", "a") as f:
             # on y ajoute le nom du fichier avec la mention chargement trop long pour indiquer que tout est à refaire
-            f.write("Chargement trop long: "+nom+"\n")
+            f.write("Chargement trop long: " + nom + "\n")
     else:
         # Sinon on récupère le html de la page réponse
         page_resultat = browser.page_source
         # on fait appel à la fonction nettoyage_page qui permet d'obtenir la réponse nettoyée de ses balises html
-        mesh_group =nettoyage_page(page_resultat)
+        mesh_group = nettoyage_page(page_resultat)
         # si une des traductions n'a pas été trouvée dans la réponse
         if "non trouvé" in mesh_group:
             # On indique à l'utilisateur qu'une traduction n'a pas été trouvée
-            print("Une traduction n'a pas été trouvée. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
+            print(
+                "Une traduction n'a pas été trouvée. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
             # on ouvre le fichier txt contenant les fichiers non corrigés
             with open("fichiers_a_corriger.txt", "a") as f:
                 # on y ajoute le nom du fichier avec la mention traduction non trouvée pour indiquer qu'un des mots clefs mesh n'a pas été traduit et doit être réalisé manuellement
-                f.write("Traduction non trouvée: "+nom+"\n")
+                f.write(f"Traduction non trouvée: {nom}. Lien: https://pubmed.ncbi.nlm.nih.gov/{pmid}/#mesh-terms\n")
     # on retourne les mots clefs mesh traduits et un fichier fichier_a_corriger rempli
     return mesh_group
 
