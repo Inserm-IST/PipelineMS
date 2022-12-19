@@ -12,6 +12,10 @@ Corrections réalisées le 31/08/2022 à la demande C.Iizuka, responsable édito
 """
 
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 import requests
 import time
 import re
