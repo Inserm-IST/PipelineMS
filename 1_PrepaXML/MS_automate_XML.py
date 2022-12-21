@@ -12,6 +12,10 @@ Corrections réalisées le 31/08/2022 à la demande C.Iizuka, responsable édito
 """
 
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 import requests
 import time
 import re
@@ -59,7 +63,7 @@ def traduction(pmid,browser,nom):
     :trype: str
     """
     # trouver le formulaire à remplir dans la page (formulaire nommé pmids)
-    formElem = browser.find_element_by_id('pmIds')
+    formElem = browser.find_element(By.ID, 'pmIds')
     # nettoyage du formulaire
     formElem.clear()
     # rentrer le pmId
@@ -69,29 +73,34 @@ def traduction(pmid,browser,nom):
     # cliquer sur le bouton go
     buttonElem.click()
     # Attendre 30 secondes pour laisser le temps au serveur de donner la réponse
-    time.sleep(30)
     mesh_group = False
-    # au bout de 30 secondes, si le bouton a encore comme valeur chargement
-    if 'Chargement' in buttonElem.get_attribute('value'):
+    try:
+        WebDriverWait(browser, timeout=30).until(
+            EC.text_to_be_present_in_element_value((By.ID, 'goButton'), 'Go')
+        )
+    except TimeOutException as err:
+        print("Traduction non trouvé en 30sec: {}".format(err))
         # On indique à l'utilisateur que le fichier n'a pas pu être traité
-        print("Le fichier "+ nom+" n'a pas pu être traité. Veuillez fournir le pmid et les mots-clefs MESH manuellement. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
+        print(
+            "Le fichier " + nom + " n'a pas pu être traité. Veuillez fournir le pmid et les mots-clefs MESH manuellement. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
         # on ouvre le fichier txt contenant les fichiers non corrigés
         with open("fichiers_a_corriger.txt", "a") as f:
             # on y ajoute le nom du fichier avec la mention chargement trop long pour indiquer que tout est à refaire
-            f.write("Chargement trop long: "+nom+"\n")
+            f.write("Chargement trop long: " + nom + "\n")
     else:
         # Sinon on récupère le html de la page réponse
         page_resultat = browser.page_source
         # on fait appel à la fonction nettoyage_page qui permet d'obtenir la réponse nettoyée de ses balises html
-        mesh_group =nettoyage_page(page_resultat)
+        mesh_group = nettoyage_page(page_resultat)
         # si une des traductions n'a pas été trouvée dans la réponse
         if "non trouvé" in mesh_group:
             # On indique à l'utilisateur qu'une traduction n'a pas été trouvée
-            print("Une traduction n'a pas été trouvée. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
+            print(
+                "Une traduction n'a pas été trouvée. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
             # on ouvre le fichier txt contenant les fichiers non corrigés
             with open("fichiers_a_corriger.txt", "a") as f:
                 # on y ajoute le nom du fichier avec la mention traduction non trouvée pour indiquer qu'un des mots clefs mesh n'a pas été traduit et doit être réalisé manuellement
-                f.write("Traduction non trouvée: "+nom+"\n")
+                f.write(f"Traduction non trouvée: {nom}. Lien: https://pubmed.ncbi.nlm.nih.gov/{pmid}/#mesh-terms\n")
     # on retourne les mots clefs mesh traduits et un fichier fichier_a_corriger rempli
     return mesh_group
 
@@ -153,28 +162,42 @@ def enrichissementXML(nom,browser, pmid_verif=False):
     # récupération du doi en lui même (le contenu de la balise doi)
     doi = doi_xml.firstChild.nodeValue
     # fonction permettant à partir d'un doi d'obtenir le pmid équivalent.
-    try:
-        pmid = metapub.convert.doi2pmid(doi)
-        kwd_group = traduction(pmid, browser, nom)
-        # application de la fonction traduction qui permet d'interroger le traducteur web du mesh et en récupère les mots clefs
-        # mesh
-        if kwd_group == False:
-            pass
-        else:
-            # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
-            root = CreationArbre(root, nom, pmid, kwd_group)
-            # ouverture du fichier XML
-            f = open(nom, 'w', encoding='utf-8')
-            # impression dans le fichier de l'arbre XML obtenu
-            root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
-            # fermeture du fichier
-            f.close()
-    except:
+    print("> doi: %s" % doi)
+    pmid = metapub.convert.doi2pmid(doi)
+    # Si le pmid n'est pas trouvé ou est ambigu
+    if (pmid is None) or (pmid == 'AMBIGUOUS'):
         print("Le pmid de l'article ne peut pas être trouvé. Le document n'est pas traité.")
+        # on y ajoute le nom du fichier avec la mention pmid non trouvé
+        print("pmid: %s" % pmid)
         with open("fichiers_a_corriger.txt", "a") as f:
-            # on y ajoute le nom du fichier avec la mention pmid non trouvé
-            f.write("Pmid non trouvé: " + nom + "\n")
-
+            f.write(f"Pmid non trouvé: {nom}. Doi: {doi}")
+    else:
+        try:
+            print("> pmid: %s" % pmid)
+            print("> Recherche traduction en cours...")
+            start_time = time.time()
+            kwd_group = traduction(pmid, browser, nom)
+            end_time = time.time()
+            print("> Traduction trouvée en %.2f secondes" % (end_time - start_time))
+            # application de la fonction traduction qui permet d'interroger le traducteur web du mesh et en récupère les mots clefs
+            # mesh
+            if kwd_group == False:
+                pass  # Si la traduction est vide on n'ajoute pas le pmid ?
+            else:
+                # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
+                root = CreationArbre(root, nom, pmid, kwd_group)
+                # ouverture du fichier XML
+                f = open(nom, 'w', encoding='utf-8')
+                # impression dans le fichier de l'arbre XML obtenu
+                root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
+                # fermeture du fichier
+                f.close()
+        except Exception as err:
+            print(err)
+            print("Le pmid de l'article ne peut pas être trouvé. Le document n'est pas traité.")
+            with open("fichiers_a_corriger.txt", "a") as f:
+                # on y ajoute le nom du fichier avec la mention pmid non trouvé
+                f.write("Pmid non trouvé: " + nom + "\n")
 
 
 def sup_graphic(fichier):

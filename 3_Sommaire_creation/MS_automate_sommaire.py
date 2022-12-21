@@ -24,10 +24,9 @@ def create_page(df):
     # récupération du numéro de page de chaque article et ajout dans le dataframe dans la colonne page
     length_df = int(len(df.index))
     # initialisation du n et de la liste liste_page
-    n = 0
-    liste_page = []
+    liste_page=[]
     # Pour chaque ligne du csv (soit les métadonnées d'un fichier) je réalise les opérations suivantes
-    while n != length_df:
+    for n in range(length_df):
         # récupération de la ligne de métadonnées dans le csv
         MD_fichier = df.loc[n]
         # récupération du contenu de la cellule dc.source et stockage dans la variable source
@@ -40,8 +39,6 @@ def create_page(df):
         page = int(page.replace("-", ""))
         # ajout du numéro obtenu dans la liste liste_page
         liste_page.append(page)
-        # incrémentation du n
-        n += 1
     # ajout d'une colonne page dans le dataframe qui correspond au numéro de page de l'article
     df["page"]=liste_page
     # organisation de la dataframe en fonction du numéro de page
@@ -58,15 +55,17 @@ def create_df_cat(df):
     """
     # stockage dans une variable liste_cat des valeurs dans la colonne catégorie
     liste_cat = df["dc.relation.ispartof[]"].tolist()
-    # initialisation de la liste unique_liste_cat
-    unique_liste_cat = []
-    # pour chaque valeur récupérée, si celle-ci n'est pas présente dans la liste unique_liste_cat on l'ajoute
-    for x in liste_cat:
-        if x not in unique_liste_cat:
-            unique_liste_cat.append(x)
+    unique_liste_cat = list(dict.fromkeys(liste_cat))
 
     return unique_liste_cat
 
+def auteur_nom_propre(el_auteur):
+    # récupération du nom et du prénom de l'auteur avec des regex
+    prenom = re.sub(r'([a-zA-ZéÉ]|-)*, ', '', el_auteur)
+    nom = re.sub(r', ([a-zA-ZéÉ]|-)*', '', el_auteur)
+    # reformulation du nom de l'auteur selon le choix éditorial réalisé
+    auteur_propre = prenom + " " + nom
+    return el_auteur
 
 def construction_auteur(df):
     """
@@ -78,43 +77,28 @@ def construction_auteur(df):
     # récupération de la valeur de la cellule dc.contributor.author pour la ligne étudiée (soit les auteurs de l'article)
     auteurs = df['dc.contributor.author[-]']
     # division de la chaîne de caractères obtenue en une liste d'auteurs
-    auteur_liste = list(auteurs.split("||"))
-    # initialisation du n_auteur
-    n_auteur = 0
-    # récupération du nombre d'éléments que contient la liste
-    n_length_auteur = len(auteur_liste)
-    # initialisation des variables réutilisées dans la boucle suivante
-    auteur_liste_propre = []
+    list_auth = list(auteurs.split("||"))
+
     # pour chaque auteur de la liste
-    for el_auteur in auteur_liste:
-        # incrémentation du numéro de l'auteur
-        n_auteur += 1
-        # récupération du nom et du prénom de l'auteur avec des regex
-        prenom = re.sub(r'([a-zA-ZéÉ]|-)*, ', '', el_auteur)
-        nom = re.sub(r', ([a-zA-ZéÉ]|-)*', '', el_auteur)
-        # reformulation du nom de l'auteur selon le choix éditorial réalisé
-        auteur_propre = prenom + " " + nom
-        # si il n'y a qu'un seul auteur dans notre liste d'auteur
-        if n_length_auteur == 1:
-            # on ajoute l'auteur en question dans la liste d'auteurs propres et on rompt la boucle for
-            auteur_liste_propre.append(auteur_propre)
-            break
-        # si l'auteur traité est l'avant dernier de la liste
-        elif n_auteur==n_length_auteur-1:
-            # on ajoute le nom de l'auteur avec un espace à la liste d'auteurs propres
-            auteur_liste_propre.append(auteur_propre+" ")
-        # si l'auteur traité n'est pas le dernier auteur ou l'avant dernier auteur de la liste
-        elif n_auteur<n_length_auteur:
-            # on ajoute le nom de l'auteur et une virgule à la liste d'auteurs propres
-            auteur_liste_propre.append(auteur_propre + ", ")
-        # si l'auteur est le dernier de la liste
-        elif n_length_auteur == n_auteur:
-            # on ajoute "et" et le nom de l'auteur à la liste et on arrête la boucle
-            auteur_liste_propre.append("et " + auteur_propre)
-            break
+    # si il n'y a qu'un seul auteur dans notre liste d'auteur
+    string_auth = ""
+    for i, el in enumerate(list_auth, start=1):
+        # dernier élément
+        if i == len(list_auth):
+            el_propre = auteur_nom_propre(el)
+            string_auth += el_propre
+            # avant dernier élément
+        elif i == len(list_auth) - 1:
+            el_propre = auteur_nom_propre(el)
+            string_auth += (el_propre + " et ")
+            # élément quelconque
+        else:
+            el_propre = auteur_nom_propre(el)
+            string_auth += (el_propre + ", ")
+
+
     # on tranforme la liste d'auteurs propres en une chaîne de caractères unique
-    auteur_final = "".join(auteur_liste_propre)
-    return auteur_final
+    return string_auth
 
 
 def creation_html(categorie, df, racine):
@@ -127,6 +111,7 @@ def creation_html(categorie, df, racine):
     """
     # récupération des lignes du df qui font parti de la catégorie traitée
     df_categorie = df.loc[df['dc.relation.ispartof[]'] == categorie]
+    print(df_categorie)
     # réorganisation de l'index du dataframe obtenu
     df_categorie = df_categorie.reset_index(drop=True)
     # recherche de ul dans l'arbre xml
@@ -135,15 +120,10 @@ def creation_html(categorie, df, racine):
     cat_html.attrib['class']="som-titre-niveau1"
     i_cat_html = ET.SubElement(cat_html, "i")
     i_cat_html.text = categorie
-    # récupération du nombre de lignes dans le dataframe
-    length_df = int(len(df_categorie.index))
-    # initialisation du n
-    n=0
     # tant que le nombre d'itération de la boucle n'est pas égale au nombre de ligne dans le dataframe, on réitère les
     # opérations suivantes
-    while n != length_df:
-        # récupération de la ligne traitée
-        df_line = df_categorie.loc[n]
+    for n in range(len(df_categorie)):
+        df_line = df_categorie.iloc[n]
         # création des balises html pour l'article traité
         div1_html = ET.SubElement(racine, "div")
         div1_html.attrib['class']='artifact-description'
@@ -169,8 +149,6 @@ def creation_html(categorie, df, racine):
         # ajout des auteurs de l'article, récupérés et reformulés dans la fonction construction_auteur dans la balise span
         span_html.text = construction_auteur(df_line)
         p_html = ET.SubElement(racine, "p")
-        # incrémentation
-        n+=1
     # la fonction retourne l'arbre xml mis à jour
     return racine
 

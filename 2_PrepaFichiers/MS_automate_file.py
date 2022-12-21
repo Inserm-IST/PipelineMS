@@ -90,16 +90,12 @@ def renommage_files(dir,nom_standard,renommage):
     for el in os.listdir(dir):
         # si le nom du fichier traité contient msc et pdf (si il s'agit du pdf de l'article)
         if renommage in el and "pdf" in el:
-            # on créé le renommage du fichier avec le nom_standard et son extension pdf
-            nom = nom_standard+".pdf"
-            # on renomme le pdf
-            os.rename(dir+"/"+el, dir+nom)
+            # on créé le renommage du fichier avec le nom_standard et son extension pdf et on le renomme
+            os.rename(f'{dir}/{el}', f'{dir}/{nom_standard}.pdf')
         # si le fichier traité correspond au xml de l'article
         elif renommage in el and "xml" in el:
-            # on créé le nom par lequel on souhaite renommer le fichier
-            nom = nom_standard+".xml"
-            # on renomme le fichier
-            os.rename(dir+"/"+el, dir+nom)
+            # on créé le nom par lequel on souhaite renommer le fichier et on le renomme
+            os.rename(f'{dir}/{el}', f'{dir}/{nom_standard}.xml')
 
 
 def renommage_items(dossier, dir):
@@ -116,22 +112,12 @@ def renommage_items(dossier, dir):
     xml_dublin_core = etree.parse(dir+"/dublin_core.xml")
     # on récupère le numéro de l'item traité
     num_item = int(xml_dublin_core.xpath('/dublin_core/@page')[0])
-    # si le numéro d'item est plus petit que 10
-    if num_item < 10:
-        # on lui ajoute des 0 devant le nombre de façon à avoir un nombre avec 4 chiffres
-        num_item = "000"+str(num_item)
-    # si le numéro d'item est compris entre 10 et 100
-    elif 10<=num_item<100:
-        # on lui ajoute des 0 devant le nombre de façon à avoir un nombre avec 4 chiffres
-        num_item = "00"+str(num_item)
-    # si le numéro d'item est compris entre 100 et 1000
-    elif 100<=num_item<=1000:
-        # on lui ajoute des 0 devant le nombre de façon à avoir un nombre avec 4 chiffres
-        num_item = "0"+str(num_item)
+    # si le numéro d'item ne comporte pas 4 chiffres, on ajoute des 0 devant
+    num_item = f'{num_item:04d}'
     # on renomme le nom du dossier lot avec le numéro d'item
     os.rename(dir, dossier+'/item_'+str(num_item))
     # on récupère le nouveau nom du dossier
-    nom_item = dossier+"/item_"+str(num_item)
+    nom_item = f'{dossier}/item_{num_item}'
     # on retourne le nouveau nom de dossier et le nombre de l'item traité
     return nom_item, num_item
 
@@ -204,16 +190,15 @@ def automate_file(dossier, annee, mois, Horsserie):
     :param doc: chemin vers le dossier contenant les lots Medecine\Science à traiter.\n
     :return: lots nettoyés 
     """
-    # si le mois rentré est plus petit que 10
-    if len(str(mois))<2:
-        # on ajoute un 0 afin d'avoir un mois avec 2 chiffres
-        mois="0"+str(mois)
+    # si le mois rentré est plus petit que 10 on ajoute un 0 afin d'avoir un mois avec 2 chiffres
+    mois = f'{mois:02d}'
+
     # pour chaque lot dans le dossier
     for ms in os.listdir(dossier):
         # on stocke le chemin vers le lot traité
-        dir = dossier + "/" + ms+"/"
+        dir = f'{dossier}/{ms}/'
         # on indique à l'utilisateur le traitement du lot
-        print("Traitement du lot " + ms)
+        print(f"Traitement du lot {ms}")
         # création du dublin core en mobilisant la fonction creation_db créé plus haut
         creation_db(dir)
         # renommage des items avec la fonction item et récupération du nouveau chemin du dossier suite à son renommage et
@@ -225,12 +210,12 @@ def automate_file(dossier, annee, mois, Horsserie):
         # si il s'agit d'un hors série
         if Horsserie:
             # on créé le nom standard utilisé pour le renommage avec un HS
-            nom_standard = "/MS_" + str(annee) + "_" + str(mois) + "_HS_" + str(num_item)
+            nom_standard = f'/MS_{annee}_{mois}_HS_{num_item}'
             renommage = "med"
         # sinon
         else:
             # on créé le nom standard utilisé pour le renommage des fichiers avec l'année, le mois et le numéro d'item
-            nom_standard = "/MS_" + str(annee) + "_" + str(mois) + "_" + str(num_item)
+            nom_standard = f'/MS_{annee}_{mois}_{num_item}'
             renommage="ms"
         # on lance le renommage des fichiers avec la fonction renommage_files en utilisant les noms standards tout juste créé
         renommage_files(dir, nom_standard,renommage)
