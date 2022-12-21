@@ -20,7 +20,6 @@ Dans Anaconda Prompt (pour un utilisateur Windows):
 7) Ajout des lots avec le programme d'import
 8) Création du sommaire html du magazine: 
         - Dans la nouvelle page du magazine ajouté, *Contexte>exporter les métadonnées* et télécharger le csv dans le dossier PipelineMS
-        - Ajouter une colonne *categorie* dans le csv et insérer le nom de la catégorie pour chaque article
         - Lancement du programme MS_automate_sommaire.py:<br/>
         `python 3_Sommaire_creation\MS_automate_sommaire.py [nom_du_csv]`<br/>
  Pour plus d'informations: [3_Sommaire_creation](https://github.com/Inserm-IST/PipelineMS/tree/main/3_Sommaire_creation)

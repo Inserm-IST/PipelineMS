@@ -73,7 +73,6 @@ def traduction(pmid,browser,nom):
     # cliquer sur le bouton go
     buttonElem.click()
     # Attendre 30 secondes pour laisser le temps au serveur de donner la réponse
-    # Attendre 30 secondes pour laisser le temps au serveur de donner la réponse
     mesh_group = False
     try:
         WebDriverWait(browser, timeout=30).until(
