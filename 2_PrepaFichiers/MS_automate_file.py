@@ -157,7 +157,7 @@ def creation_content(dir):
             # on ouvre un fichier content
             with open(dir+"/contents","a") as f:
                 # on ajoute le nom du fichier avec sa description (le nom souhaité dans iPubli)
-                f.write(el+"\t\tdescription:Lire l'article HTML\n")
+                f.write(el+"\n")
         # si le fichier traité est le pdf de l'article
         elif "pdf" in el:
             # on ouvre le fichier content
