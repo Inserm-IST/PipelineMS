@@ -69,7 +69,7 @@ def traduction(pmid,browser,nom):
     # rentrer le pmId
     formElem.send_keys(pmid)
     # trouver le bouton go
-    buttonElem = browser.find_element_by_id('goButton')
+    buttonElem = browser.find_element(By.ID,'goButton')
     # cliquer sur le bouton go
     buttonElem.click()
     # Attendre 30 secondes pour laisser le temps au serveur de donner la réponse
