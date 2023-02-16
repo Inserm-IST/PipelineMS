@@ -227,7 +227,7 @@ def creation_sommaire(csv_file):
     liste_div = create_df_cat(df_page)
     # Création de l'élément xml racine du html sommaire
     racine = ET.Element("div", id="our_summary")
-    sommaire = ET.SubElement(racine, "p")
+    sommaire = ET.SubElement(racine, "h3")
     sommaire.text = "Sommaire"
     # pour chaque catégorie de la liste list_div les actions suivantes sont réalisées
     for categorie in liste_div:
