@@ -170,7 +170,7 @@ def creation_css(filename):
             margin-left: 30px;
 			margin-top:0.1px;
         font-style: italic;
-            color: #999;
+            color: #9e9e9e;
             }
                     p   {
     font-family: inherit;
@@ -188,7 +188,7 @@ def creation_css(filename):
     margin: 15px;
     margin-left: 30px;
     display: block;
-    color:#2b1d60;
+    color:#5db2b5;
 
             }
 
@@ -198,8 +198,7 @@ def creation_css(filename):
 			margin-bottom: 0.1px;
     font family:"Open Sans", Calibri, Verdana, Arial, sans-serif;
     line-height: 1.428571429;
-    color:#707070;
-
+  
          }
 
         </style>
@@ -228,7 +227,7 @@ def creation_sommaire(csv_file):
     liste_div = create_df_cat(df_page)
     # Création de l'élément xml racine du html sommaire
     racine = ET.Element("div", id="our_summary")
-    sommaire = ET.SubElement(racine, "p")
+    sommaire = ET.SubElement(racine, "h3")
     sommaire.text = "Sommaire"
     # pour chaque catégorie de la liste list_div les actions suivantes sont réalisées
     for categorie in liste_div:
