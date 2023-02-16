@@ -34,9 +34,12 @@ def create_page(df):
         # récupération du contenu de la cellule dc.source et stockage dans la variable source
         source = MD_fichier["dc.source[]"]
         # récupération du numéro de page de la dernière page de l'article
-        page = re.findall(r'-.{1,4}$', source)
+        page = re.findall(r'\d{1,4}$', source)
         page = "".join(page)
-        page = int(page.replace("-", ""))
+        if "-" in page:
+            page = int(page.replace("-", ""))
+        else:
+            page = int(page)
         # ajout du numéro obtenu dans la liste liste_page
         liste_page.append(page)
     # ajout d'une colonne page dans le dataframe qui correspond au numéro de page de l'article
@@ -111,7 +114,6 @@ def creation_html(categorie, df, racine):
     """
     # récupération des lignes du df qui font parti de la catégorie traitée
     df_categorie = df.loc[df['dc.relation.ispartof[]'] == categorie]
-    print(df_categorie)
     # réorganisation de l'index du dataframe obtenu
     df_categorie = df_categorie.reset_index(drop=True)
     # recherche de ul dans l'arbre xml
