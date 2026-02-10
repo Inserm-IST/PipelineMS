@@ -2,110 +2,107 @@
 Programme N1 pour la préparation des lots Medecine\Science. Gère le XML M\S.
     - Automatisation de l'enrichissement des métadonnées des articles de Medecine/Sciences:
         - Obtient le pmId de chaque article à partir du DOI récupéré et en interrogeant PubMed
-        - Récupère les mots clefs MeSH en français à partir du moteur de traduction du MeSH bilingue
-    - Suppression des balises graphic associés à des images qui ne seront pas utilisées (small, tiff...)
+        - Récupère les mots clefs MeSH (en anglais) + leurs UIDs en interrogeant PubMed
+        - Récupère les traductions des termes MeSH en français à partir du fichier 
+            lookups.json du MeSH bilingue (extraction de MTW)
+    - Suppression des balises graphic associés à des images qui ne seront pas utilisées
+      (small, tiff...)
 
 Auteur: Juliette Janes
 Role: Ingénieure Traitement de Métadonnées et Langages Documentaires
 Date: 20/01/2022
 Corrections réalisées le 31/08/2022 à la demande C.Iizuka, responsable éditoriale d'iPubli
+---
+Modification du programme le 27/01/2025 par Fanny Pesle, à la demande de Charlotte Iizuka
+---
+Corrections apportées le 10/02/2026 par F.Pesle & C.Iizuka suite à la modification du format 
+des termes MeSH récupérés via PubMed
 """
+import os
+# chargement de la clef d'API pour augmenter la capacité de requetes sur PubMed 
+# (10 rq/sec au lieu de 3)
+os.environ["NCBI_API_KEY"] = "e06fe9a4b0a2afd3b3bf68bc141081712508"
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-import requests
 import time
-import re
 from xml.dom import minidom
 import metapub
 import os
 from lxml import etree as ET
 import click
+import json
 
 
-def nettoyage_page(page):
+# Création d'un dictionnaire local de traduction des termes MeSH
+with open('2024_lookups.json', 'r', encoding='utf-8') as file:
+    data = json.load(file)
+lookups = data['lookups_base']
+mesh_trads = {t['dui']:t for t in lookups}
+
+
+def traduction(pmid : str, nom : str):
     """
-    Fonction qui pour une page html fournie, retourne en sortie uniquement les mots clefs mesh en français
-    :param page: code source de la page html résultat
-    :type page: str
-    :return: mots clefs mesh en français structurés en xml
-    :rtype: str
-    """
-    # récupération de la réponse dans la page html à l'aide d'une expression régulière
-    kwd_group = re.search('<li>&lt;kwd-group kwd-group-type="MESH"&gt;(.|\n)*?<li>&lt;\/kwd-group&gt;<\/li>',
-                          page).group()
-    # plusieurs nettoyages de la réponse récupérée afin de supprimer les balises html et conserver uniquement la réponse
-    # en texte plein
-    kwd_group_1 = kwd_group.replace('<li>', '')
-    kwd_group_2 = kwd_group_1.replace('</li>', '')
-    kwd_group_3 = kwd_group_2.replace('</ul>', '')
-    kwd_group_4 = kwd_group_3.replace('<ul style="list-style-type:none">', '')
-    kwd_group_5 = kwd_group_4.replace('&lt;', '<')
-    kwd_group_propre = kwd_group_5.replace('&gt;', '>')
-    # on retourne la réponse propre
-    return kwd_group_propre
-
-
-def traduction(pmid,browser,nom):
-    """
-    Fonction qui pour un pmid donné, ouvre un navigateur internet à la page de traduction des mots clefs meshs, qu'elle
-    donne en sortie
+    Fonction qui pour un pmid donné, récupère les mots clefs mesh, et retourne
+      les correspondances depuis le MeSH bilingue en local (.json)
     :param pmid: identifiant pubmed
-    :type pmid: str
-    :param browser: page html du traducteur mesh
-    :type browser: webdriver
-    :param nom: chemin vers le fichier xml
-    :type nom: str
-    :return: mots clefs mesh en français de l'article structuré en xml
+    :return: mots clefs mesh en français de l'article PubMed
     :trype: str
     """
-    # trouver le formulaire à remplir dans la page (formulaire nommé pmids)
-    formElem = browser.find_element(By.ID, 'pmIds')
-    # nettoyage du formulaire
-    formElem.clear()
-    # rentrer le pmId
-    formElem.send_keys(pmid)
-    # trouver le bouton go
-    buttonElem = browser.find_element(By.ID,'goButton')
-    # cliquer sur le bouton go
-    buttonElem.click()
-    # Attendre 30 secondes pour laisser le temps au serveur de donner la réponse
-    mesh_group = False
-    try:
-        WebDriverWait(browser, timeout=30).until(
-            EC.text_to_be_present_in_element_value((By.ID, 'goButton'), 'Go')
-        )
-    except TimeOutException as err:
-        print("Traduction non trouvé en 30sec: {}".format(err))
-        # On indique à l'utilisateur que le fichier n'a pas pu être traité
-        print(
-            "Le fichier " + nom + " n'a pas pu être traité. Veuillez fournir le pmid et les mots-clefs MESH manuellement. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
-        # on ouvre le fichier txt contenant les fichiers non corrigés
-        with open("fichiers_a_corriger.txt", "a") as f:
-            # on y ajoute le nom du fichier avec la mention chargement trop long pour indiquer que tout est à refaire
-            f.write("Chargement trop long: " + nom + "\n")
+    fetch = metapub.PubMedFetcher()
+    article = fetch.article_by_pmid(pmid)
+    article_MeSH = article.mesh
+    mesh_terms_fr = []
+    continue_yn = 'y'
+
+    # par securité, ralentir la cadence des requêtes vers l'API PubMed pour ne pas
+    # faire planter le programme (Erreur 500 Server)
+    time.sleep(0.5)
+
+    # Pour chaque dui de descripteur MeSH associé à l'article, s'il y en a
+    for dui in article_MeSH.keys():
+        # on essaie de récuperer la traduction FR du descripteur
+        try:
+            # assert continue_yn == 'y'
+            # si une trad est trouvée pour le terme, on l'ajoute à la liste des mots clefs de l'article
+            descriptor_fr = mesh_trads[dui]['trx']
+            mesh_terms_fr.append(descriptor_fr)
+        except KeyError:
+            # si pas de trad pour ce dui dans le MeSH local, on informe l'utilisatrice
+            print(f"Fichier {nom} (PMID = {pmid}) : Traduction MeSH non trouvée pour le terme : {dui} : {article_MeSH[dui]['descriptor_name']}")
+            with open("fichiers_a_corriger.txt", "a", encoding='utf-8') as f:
+                # on ecrit le même message d'erreur dans le fichier de rapport d'erreurs que dans la console
+                f.write(f"Fichier {nom} (PMID = {pmid}) : Traduction MeSH non trouvée pour le terme : {dui} : {article_MeSH[dui]['descriptor_name']}")
+            continue_yn = input('Continuer le traitement des fichiers ? (y/n)')
+            if continue_yn == 'n':
+                break
+
+        # si le descripteur a un qualifieur associé, on applique le même traitement pour l'ajouter à la liste
+        term = article_MeSH[dui]
+        if len(term['qualifiers'])>0:
+            for q in term['qualifiers']:
+                # combinaison du qualifier avec son descripteur
+                qualifier_fr = mesh_trads[q['qualifier_ui']]['trx']
+                combo_q_d = descriptor_fr + ' - ' + qualifier_fr
+                mesh_terms_fr.append(combo_q_d)
+    # formattage XML des mots clefs si trouvés
+    if len(mesh_terms_fr)>0 :
+        open_xml_tag_str = '\n<kwd-group kwd-group-type="MESH">\n<kwd>'
+        close_xml_tag_str = '</kwd>\n</kwd-group>\n'
+        join_xml_tag_str = '</kwd>\n<kwd>'
+
+        mesh_terms_fr_str = join_xml_tag_str.join(mesh_terms_fr)
+        mesh_terms_fr_str = open_xml_tag_str + mesh_terms_fr_str + close_xml_tag_str
+    
+    # si aucun terme MeSH associé à l'article sur pubmed
     else:
-        # Sinon on récupère le html de la page réponse
-        page_resultat = browser.page_source
-        # on fait appel à la fonction nettoyage_page qui permet d'obtenir la réponse nettoyée de ses balises html
-        mesh_group = nettoyage_page(page_resultat)
-        # si une des traductions n'a pas été trouvée dans la réponse
-        if "non trouvé" in mesh_group:
-            # On indique à l'utilisateur qu'une traduction n'a pas été trouvée
-            print(
-                "Une traduction n'a pas été trouvée. Le nom du fichier est disponible dans le document 'fichiers_a_corriger'.")
-            # on ouvre le fichier txt contenant les fichiers non corrigés
-            with open("fichiers_a_corriger.txt", "a") as f:
-                # on y ajoute le nom du fichier avec la mention traduction non trouvée pour indiquer qu'un des mots clefs mesh n'a pas été traduit et doit être réalisé manuellement
-                f.write(f"Traduction non trouvée: {nom}. Lien: https://pubmed.ncbi.nlm.nih.gov/{pmid}/#mesh-terms\n")
-    # on retourne les mots clefs mesh traduits et un fichier fichier_a_corriger rempli
-    return mesh_group
+        # renvoyer une tring vide
+        mesh_terms_fr_str = ''
+    
+    return mesh_terms_fr_str
 
 
-def CreationArbre(root,nom, pmid, kwd_group_xml):
+
+
+def CreationArbre(root, pmid, kwd_group_xml):
     """
     Fonction qui, en prenant en entrée un fichier Medecine/Sciences, son pmid et les mots clefs mesh en français,
     ajoute les deux derniers éléments à l'arbre XML.
@@ -131,73 +128,75 @@ def CreationArbre(root,nom, pmid, kwd_group_xml):
     pmid_xml.appendChild(pmid_texte)
     # ajout de la balise article-id et de ses enfants tout juste créés sous la balise article-meta
     article_meta.insertBefore(pmid_xml, article_meta.childNodes[0])
-    # récupération de la balise counts
-    sibling_node_place = root.getElementsByTagName("counts")[0]
-    # transformation des mots clefs traduits en arbre XML
-    kwd_group_xml = minidom.parseString(kwd_group_xml).documentElement
-    # ajout des mots clefs dans la balise counts
-    article_meta.insertBefore(kwd_group_xml, sibling_node_place)
-    # on retourne l'arbre xml corrigée
+    # si des mots clefs MeSH sont trouvés
+    if len(kwd_group_xml)>0:
+        # récupération de la balise counts
+        sibling_node_place = root.getElementsByTagName("counts")[0]
+        # transformation des mots clefs traduits en arbre XML
+        kwd_group_xml = minidom.parseString(kwd_group_xml).documentElement
+        # ajout des mots clefs juste avant la balise counts
+        article_meta.insertBefore(kwd_group_xml, sibling_node_place)
+    # on retourne l'arbre xml enrichi
     return root
 
 
 
-def enrichissementXML(nom,browser, pmid_verif=False):
+def enrichissementXML(nom : str):
     """
-    Fonction qui pour un fichier xml donné, enrichie son contenu en ajoutant le pmid de l'article et les mots
-    clefs mesh en français.
+    Fonction qui pour un fichier xml donné, enrichi son contenu en ajoutant
+      le pmid de l'article et les mots-clefs mesh en français.
     :param nom: chemin du fichier XML
-    :type nom: str
-    :param browser: page html du traducteur mesh
-    :type browser: webdriver
-    :param pmid_verif: booléen indiquant la présence ou non d'un pmid dans le fichier XML traité
-    :type pmid_verif: bool
-    :return: fichier XML complété sans pmid
+    :return: fichier XML complété avec pmid et termes MeSH
     :rtype: fichier xml
     """
     # lecture du fichier XML avec la librairie minidom
     root = minidom.parse(nom)
     # récupération de la balise du doi de l'article indiqué dans le fichier XML
-    doi_xml = root.getElementsByTagName("article-id")[0]
+    article_id_tags = root.getElementsByTagName("article-id")
+    doi_xml = [tag for tag in article_id_tags if tag.getAttribute('pub-id-type')=='doi'][0]
     # récupération du doi en lui même (le contenu de la balise doi)
     doi = doi_xml.firstChild.nodeValue
     # fonction permettant à partir d'un doi d'obtenir le pmid équivalent.
     print("> doi: %s" % doi)
     pmid = metapub.convert.doi2pmid(doi)
     # Si le pmid n'est pas trouvé ou est ambigu
-    if (pmid is None) or (pmid == 'AMBIGUOUS'):
-        print("Le pmid de l'article ne peut pas être trouvé. Le document n'est pas traité.")
-        # on y ajoute le nom du fichier avec la mention pmid non trouvé
-        print("pmid: %s" % pmid)
-        with open("fichiers_a_corriger.txt", "a") as f:
-            f.write(f"Pmid non trouvé: {nom}. Doi: {doi}")
+    if (pmid is None) or (pmid == 'AMBIGUOUS') or ('NOT FOUND' in pmid):
+        # on vérifie si c'est normal de ne pas trouver le pmid (= on sait qu'il n'existe pas)
+        subject_tags = root.getElementsByTagName("subject")
+        subject_content_type_series = [tag for tag in subject_tags if tag.getAttribute('content-type')=='series']
+        if len(subject_content_type_series)>0 :
+            if subject_content_type_series[0].firstChild.nodeValue == 'Les mots de la science':
+                pass
+        else:
+            print("Le pmid de l'article ne peut pas être trouvé. Le document n'est pas traité.")
+            # on y ajoute le nom du fichier avec la mention pmid non trouvé
+            print("pmid: %s" % pmid)
+            with open("fichiers_a_corriger.txt", "a") as f:
+                f.write(f"Pmid non trouvé: {nom}. Doi: {doi}")
+    # si pmid trouvé
     else:
         try:
-            print("> pmid: %s" % pmid)
+            print("> pmid :"+pmid)
             print("> Recherche traduction en cours...")
             start_time = time.time()
-            kwd_group = traduction(pmid, browser, nom)
+            # application de la fonction traduction qui recupère les traductions dans le fichier MeSH local
+            kwd_group = traduction(pmid, nom)
             end_time = time.time()
-            print("> Traduction trouvée en %.2f secondes" % (end_time - start_time))
-            # application de la fonction traduction qui permet d'interroger le traducteur web du mesh et en récupère les mots clefs
-            # mesh
-            if kwd_group == False:
-                pass  # Si la traduction est vide on n'ajoute pas le pmid ?
-            else:
-                # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
-                root = CreationArbre(root, nom, pmid, kwd_group)
-                # ouverture du fichier XML
-                f = open(nom, 'w', encoding='utf-8')
-                # impression dans le fichier de l'arbre XML obtenu
-                root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
-                # fermeture du fichier
-                f.close()
+            print(f"> Traduction trouvée en {end_time - start_time} secondes")
+            # application de la fonction creationArbre qui intègre le pmid et le groupe des mots clefs mesh traduits dans le fichier XML
+            root = CreationArbre(root, pmid, kwd_group)
+            # ouverture du fichier XML
+            f = open(nom, 'w', encoding='utf-8')
+            # impression dans le fichier de l'arbre XML obtenu
+            root.writexml(f, addindent='    ', newl=' \n ', encoding='utf-8')
+            # fermeture du fichier
+            f.close()
         except Exception as err:
             print(err)
-            print("Le pmid de l'article ne peut pas être trouvé. Le document n'est pas traité.")
+            print(f"Une erreur {err.__class__} est survenue. Le document n'est pas traité.")
             with open("fichiers_a_corriger.txt", "a") as f:
-                # on y ajoute le nom du fichier avec la mention pmid non trouvé
-                f.write("Pmid non trouvé: " + nom + "\n")
+                # on y ajoute le nom du fichier avec la mention erreur
+                f.write("Erreur survenue : Document non traité : " + nom + "\n")
 
 
 def sup_graphic(fichier):
@@ -286,28 +285,17 @@ def remove_pmid(fichier):
 
 @click.command()
 @click.argument('doc', type=str)
-@click.option("-c","--Ch","chrome", is_flag=True, default=False, help="si on souhaite utiliser Chrome plutôt que Firefox")
-def automate_ms_motsclefs(doc,chrome):
+def automate_ms_motsclefs(doc):
     """
     Script faisant partie de la pipeline de traitement des Médecine\Sciences pour leur intégration dans iPubli.
     Programme qui, à partir d'un dossier contenant les lots de Medecine\Science pour import extrait d'EDP Sciences,
     nettoie les XML de chaque article en supprimant les mentions d'images non utilisées dns iPubli, en ajoutant le pmid
     et en récupérant puis ajoutant les mots clefs MeSH en français qui indexe l'article.\n
-    L'outil emploie le traducteur MeSH ci-joint: http://ccsdmesh.in2p3.fr/FrenchMesh/admin/translate.jsp et communique
-    avec Firefox sur votre ordinateur pour ce faire. \n
+    
     :param doc: chemin vers le dossier contenant les lots Medecine\Science à traiter.\n
     :return: fichiers XML mis à jour dans les lots
     """
-    if chrome:
-        # Ouvre le navigateur
-        browser = webdriver.Chrome(
-            executable_path=r".\1_PrepaXML\chromedriver.exe")
-    else:
-        # Ouvre le navigateur
-        browser = webdriver.Firefox(
-            executable_path=r".\1_PrepaXML\geckodriver.exe")
-    # accès à la page du traducteur mesh
-    browser.get('http://ccsdmesh.in2p3.fr/FrenchMesh/admin/translate.jsp')
+
     # création doc fichiers à corriger vide
     with open('fichiers_a_corriger.txt', 'w') as f:
         pass
@@ -338,13 +326,13 @@ def automate_ms_motsclefs(doc,chrome):
                     # on supprime le pmid du fichier avec la fonction remove_pmid
                     remove_pmid(nom)
                     # on ajoute le pmid et les mots clefs avec la fonction enrichissement XMl
-                    enrichissementXML(nom, browser, pmid_verif)
+                    enrichissementXML(nom)
                     # on supprime les images du XML avec la fonction sup_graphic
                     sup_graphic(nom)
                 # si il n'y a ni mots clefs MeSH ni pmid dans le fichier
                 else:
                     # on ajoute le pmid et les mots clefs MeSH avec la fonction enrichissement XML
-                    enrichissementXML(nom, browser)
+                    enrichissementXML(nom)
                     # on supprime les images du XML avec la fonction sup_graphic
                     sup_graphic(nom)
     print("""Tous les XML ont été traités.\n 
